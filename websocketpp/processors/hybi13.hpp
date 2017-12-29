@@ -46,6 +46,9 @@
 #include <vector>
 #include <utility>
 
+#include <websocketpp/extensions/permessage_deflate/disabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/enabled.hpp>
+
 namespace websocketpp {
 namespace processor {
 
@@ -65,7 +68,8 @@ public:
     typedef typename msg_manager_type::ptr msg_manager_ptr;
     typedef typename config::rng_type rng_type;
 
-    typedef typename config::permessage_deflate_type permessage_deflate_type;
+    typedef websocketpp::extensions::permessage_deflate::enabled
+            <config> permessage_deflate_type;
 
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
@@ -112,14 +116,15 @@ public:
         http::parameter_list p;
 
         bool error = header.get_header_as_plist("Sec-WebSocket-Extensions",p);
-
+        printf("error: %d;;;; ws-extension-length: %ld", error, p.size());
+        printf("message_enabled: %d", m_permessage_deflate.is_implemented());
         if (error) {
             ret.first = make_error_code(error::extension_parse_error);
             return ret;
         }
 
         // If there are no extensions parsed then we are done!
-        if (p.size() == 0) {
+        if (p.empty()) {
             return ret;
         }
 
